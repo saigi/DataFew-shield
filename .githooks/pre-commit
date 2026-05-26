@@ -1,0 +1,21 @@
+#!/bin/sh
+# Datafew Shield — Pre-commit hook
+# Runs lint + quick test before allowing commit
+
+echo "=== [pre-commit] Lint check ==="
+npm run lint
+if [ $? -ne 0 ]; then
+  echo "FAIL: Lint failed. Fix errors before committing."
+  exit 1
+fi
+
+echo ""
+echo "=== [pre-commit] Quick test ==="
+npm test
+if [ $? -ne 0 ]; then
+  echo "FAIL: Tests failed. Fix before committing."
+  exit 1
+fi
+
+echo ""
+echo "=== [pre-commit] All checks passed ==="

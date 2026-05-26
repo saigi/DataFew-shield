@@ -7,6 +7,9 @@
  */
 import { Shield, setEmbeddingReady } from '../index.js';
 import { request as h } from 'node:http';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+var __dirname = dirname(fileURLToPath(import.meta.url));
 
 var TOTAL = 0, BLOCKED = 0, BYPASS = 0;
 var RESULTS = {};
@@ -81,7 +84,7 @@ async function testPrompt(prompt, shield, sessionId) {
 // ─── Run ───
 var health = await checkEmbed();
 setEmbeddingReady(health && health.status === 'ok');
-var shield = new Shield({ policyDir: 'D:\\ProgramData\\No-Human\\datafew-shield\\policies' });
+var shield = new Shield({ policyDir: resolve(__dirname, '..', 'policies') });
 await shield.sandboxManager.createSandbox('gandalf-test', {});
 
 console.log('=== GANDALF LEVELS: SHIELD TEST ===\n');

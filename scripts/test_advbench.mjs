@@ -5,6 +5,9 @@
 import { Shield, setEmbeddingReady } from '../index.js';
 import { request as h } from 'node:http';
 import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+var __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function checkEmbed() {
   return new Promise(function(r) {
@@ -15,7 +18,7 @@ async function checkEmbed() {
 }
 
 // Parse CSV
-var csv = readFileSync('D:\\ProgramData\\No-Human\\datafew-shield\\data\\external\\hex_phi_harmful.csv', 'utf-8');
+var csv = readFileSync(resolve(__dirname, '..', 'data', 'external', 'hex_phi_harmful.csv'), 'utf-8');
 var lines = csv.trim().split('\n');
 var goals = [];
 for (var i = 1; i < lines.length; i++) {
@@ -31,7 +34,7 @@ console.log('AdvBench: ' + goals.length + ' harmful goals\n');
 
 var health = await checkEmbed();
 setEmbeddingReady(health && health.status === 'ok');
-var shield = new Shield({ policyDir: 'D:\\ProgramData\\No-Human\\datafew-shield\\policies' });
+var shield = new Shield({ policyDir: resolve(__dirname, '..', 'policies') });
 
 var total = 0, blocked = 0, tStart = Date.now();
 var byLayer = {};

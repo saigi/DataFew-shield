@@ -3,9 +3,12 @@
  */
 
 import { Shield } from '../index.js';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 var API = 'http://localhost:3001';
-var shield = new Shield({ mode: 'inspect', policyDir: 'D:\\ProgramData\\No-Human\\datafew-shield\\policies' });
+var shield = new Shield({ mode: 'inspect', policyDir: resolve(__dirname, '..', 'policies') });
 await shield.sandboxManager.createSandbox('test-s', {});
 
 async function testModel(prompt) {

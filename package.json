@@ -6,7 +6,13 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "node test/run.js"
+    "lint": "node scripts/lint.mjs",
+    "test": "node test/run.js",
+    "test:owasp": "node test/test_owasp_top10.mjs",
+    "test:mitre": "node test/test_mitre_atlas.mjs",
+    "test:dlp": "node test/test_dlp.mjs",
+    "test:advbench": "node scripts/test_advbench.mjs",
+    "test:full": "node test/run.js && node test/test_dlp.mjs && node test/test_owasp_top10.mjs && node test/test_mitre_atlas.mjs"
   },
   "dependencies": {
     "chokidar": "^4.0.0",

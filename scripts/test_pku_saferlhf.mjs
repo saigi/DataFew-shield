@@ -7,8 +7,11 @@ import { Shield, setEmbeddingReady } from '../index.js';
 import { request as h } from 'node:http';
 import { createInterface } from 'node:readline';
 import { createReadStream } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+var __dirname = dirname(fileURLToPath(import.meta.url));
 
-var TEST_FILE = 'D:\\ProgramData\\No-Human\\datafew-shield\\data\\external\\pku_saferlhf_test.jsonl';
+var TEST_FILE = resolve(__dirname, '..', 'data', 'external', 'pku_saferlhf_test.jsonl');
 var MAX_TEST = 500; // sample 500 due to time
 
 async function checkEmbed() {
@@ -21,7 +24,7 @@ async function checkEmbed() {
 
 var health = await checkEmbed();
 setEmbeddingReady(health && health.status === 'ok');
-var shield = new Shield({ policyDir: 'D:\\ProgramData\\No-Human\\datafew-shield\\policies' });
+var shield = new Shield({ policyDir: resolve(__dirname, '..', 'policies') });
 
 // Read dataset, find harmful/safe pairs
 var items = [];

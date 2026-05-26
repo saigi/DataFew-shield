@@ -1,0 +1,13 @@
+#!/bin/sh
+# Datafew Shield — Pre-push hook
+# Runs full test suite before allowing push
+
+echo "=== [pre-push] Full test suite ==="
+npm run test:full
+if [ $? -ne 0 ]; then
+  echo "FAIL: Full test suite failed. Fix before pushing."
+  exit 1
+fi
+
+echo ""
+echo "=== [pre-push] All checks passed ==="

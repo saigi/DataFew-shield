@@ -19,7 +19,7 @@ async function checkEmbed() {
 
 var health = await checkEmbed();
 setEmbeddingReady(health && health.status === 'ok');
-var shield = new Shield({ policyDir: 'D:\\ProgramData\\No-Human\\datafew-shield\\policies' });
+var shield = new Shield({ policyDir: resolve(__d, '..', 'policies') });
 
 // Load APE safety test cases
 var testPath = resolve(__d, '..', '..', 'agentboard', 'backend', 'ape', 'data', 'safety_test_cases.json');

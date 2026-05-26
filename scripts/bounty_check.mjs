@@ -4,6 +4,9 @@
  */
 import { Shield, setEmbeddingReady } from '../index.js';
 import { request as h } from 'node:http';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+var __dirname = dirname(fileURLToPath(import.meta.url));
 
 var hlth = await new Promise(function(r) {
   h({hostname:'localhost',port:5000,path:'/health',method:'GET'},function(res){
@@ -12,7 +15,7 @@ var hlth = await new Promise(function(r) {
 });
 
 setEmbeddingReady(hlth && hlth.status === 'ok');
-var s = new Shield({ policyDir: 'D:\\ProgramData\\No-Human\\datafew-shield\\policies' });
+var s = new Shield({ policyDir: resolve(__dirname, '..', 'policies') });
 await s.sandboxManager.createSandbox('bb', {});
 
 var tests = [

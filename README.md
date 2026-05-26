@@ -2,17 +2,17 @@
 
 **Agent Execution Safety Framework**
 
-[![AdvBench 98.5%](https://img.shields.io/badge/AdvBench-98.5%25-success)](https://github.com/saigi/DataFew-shield)
-[![AgentHarm 96%](https://img.shields.io/badge/AgentHarm-96%25-success)](https://github.com/saigi/DataFew-shield)
-[![OWASP Top10 100%](https://img.shields.io/badge/OWASP_Top10-100%25-success)](https://github.com/saigi/DataFew-shield)
-[![MITRE ATLAS 95%](https://img.shields.io/badge/MITRE_ATLAS-95%25-success)](https://github.com/saigi/DataFew-shield)
+[![Tool Exec 100%](https://img.shields.io/badge/Tool_Exec-100%25-success)](https://github.com/saigi/DataFew-shield)
+[![AgentHarm 97%](https://img.shields.io/badge/AgentHarm-97%25-success)](https://github.com/saigi/DataFew-shield)
+[![OWASP Top10 93%](https://img.shields.io/badge/OWASP_Top10-93%25-success)](https://github.com/saigi/DataFew-shield)
+[![MITRE ATLAS 88%](https://img.shields.io/badge/MITRE_ATLAS-88%25-success)](https://github.com/saigi/DataFew-shield)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue)](https://opensource.org/licenses/Apache-2.0)
 
 **LLM content filters control what the model says. Datafew Shield controls what the agent does.**
 
 When an AI agent calls `read_file("/etc/shadow")`, no prompt guard or moderation API can stop it. The content filter never sees the tool call. Datafew Shield is an **execution safety layer** that inspects every tool invocation, file access, and behavioral sequence — independent of the LLM, the model provider, or the jailbreak technique.
 
-Benchmarked across **14 industry and academic standards** with **1,671 test cases**: 98.5% on AdvBench/HEx-PHI, 96% on UK AISI AgentHarm, 100% on OWASP LLM Top 10, 100% on cross-language attacks including Classical Chinese and Cantonese.
+Benchmarked across **7 industry standards** with **~1,100 test cases**. Designed for **execution-layer safety** — tool command interception is 100%, while semantic content filtering (AdvBench) reflects the L1 embedding classifier's standalone performance. Combines with any LLM content filter for full-stack protection.
 
 ---
 
@@ -41,14 +41,29 @@ curl -X POST http://localhost:8080/inspect \
 ## Quick Test
 
 ```bash
-# Run the full 505-case test suite (requires embedding server)
+# Run basic safety tests (no external data required)
 node test/run.js
 
-# Run individual benchmark
-node test/test_gandalf_live.mjs    # Gandalf levels 1-7
+# Run individual benchmarks (test data bundled in repo)
 node test/test_owasp_top10.mjs     # OWASP LLM Top 10
 node test/test_mitre_atlas.mjs     # MITRE ATLAS
+node test/test_adversarial.mjs     # Adversarial attacks
+node test/test_dlp.mjs            # Data leak prevention
 ```
+
+## Benchmark Data
+
+| Dataset | Size | Bundled | Download |
+|---------|------|---------|----------|
+| AdvBench / HEx-PHI | 82 KB | ✅ `data/external/hex_phi_harmful.csv` | — |
+| OWASP / MITRE / Adversarial | — | ✅ `data/extra_tests.json` | — |
+| AgentHarm (UK AISI) | ~1 MB | ❌ | Separate project (see below) |
+| PKU-SafeRLHF | 77 MB | ❌ | `node scripts/download_datasets.mjs` |
+| Garak probes | ~2 MB | ✅ `data/garak_*.json` | — |
+
+**AgentHarm**: Download the [agentboard](https://github.com/saigi/agentboard) repo to `../agentboard/` relative to this project, or set `AGENTBOARD_PATH` env var.
+
+**PKU-SafeRLHF**: Run `node scripts/download_datasets.mjs` to download test data.
 
 ---
 
@@ -75,38 +90,49 @@ Input → Sandbox → Policy Engine → Data Classifier → Chain Detector → V
 
 ## Benchmark Results
 
-| Benchmark | Source | Cases | Block Rate |
-|-----------|--------|-------|------------|
-| AgentHarm | UK AI Security Institute | 176 | **96.0%** |
-| AgentHarm (Chat) | UK AISI | 44 | **100%** |
-| AdvBench / HEx-PHI | Zou et al. (CMU) | 520 | **98.5%** |
-| OWASP LLM Top 10 | OWASP Foundation | 30 | **100%** |
-| MITRE ATLAS | MITRE Corporation | 41 | **95.1%** |
-| Gandalf Levels 1–7 | Lakera AI | 26 | **100%** |
-| PKU-SafeRLHF (Harmful) | Peking University | 500 | **100%** |
-| Internal Adversarial | Datafew | 33 | **91%** |
-| Chinese / Classical Chinese | Datafew | 91 | **95%** |
-| Tool Command Safety | Datafew | 18 | **100%** |
-| **Composite** | **14 benchmarks** | **1,671** | **~90%** |
+### Execution-Layer Safety (Shield Core)
 
-### Comparison: AdvBench/HEx-PHI
+These tests measure Shield's primary function — intercepting malicious tool invocations. L0 policy + L2 data classification are deterministic, zero false positives.
+
+| Benchmark | Cases | Block Rate | Layer |
+|-----------|-------|------------|-------|
+| Basic Tool Commands | 13 | **100%** | L0 policy |
+| AgentHarm (tool-based) | 176 | **97%** | L0+L1+L3 |
+| AgentHarm Chat | 44 | **100%** | L0+L1+L3 |
+| DLP Data Lineage | 7 | **100%** | DLP |
+| Attack Chains | 4+ patterns | **100%** | L0 chain |
+| Multi-Step Session Risk | 4 scenarios | **100%** | L3 |
+
+### Content-Layer Safety (L1 Semantic Scoring)
+
+These tests measure the standalone L1 embedding classifier against text-only prompts. Shield is not a content filter — these scores show the semantic layer's independent performance.
+
+| Benchmark | Source | Cases | Block Rate | Notes |
+|-----------|--------|-------|------------|-------|
+| AdvBench / HEx-PHI | Zou et al. (CMU) | 520 | **93%** | Pure text prompts; no policy layer active |
+| OWASP LLM Top 10 | OWASP Foundation | 30 | **93%** | 28/30; LLM01/LLM10 remain |
+| MITRE ATLAS | MITRE Corporation | 41 | **88%** | 15 techniques tested |
+| Internal Adversarial | Datafew | 33 | **97%** | |
+
+### Combined Protection
 
 | System | Block Rate | Type |
 |--------|-----------|------|
 | GPT-4 (default) | ~80–90% | Content-level |
-| Llama-2-Chat 7B | ~85% | Content-level |
 | Claude 3.5 Sonnet | ~90–95% | Content-level |
-| **Datafew Shield** | **98.5%** | **Execution-level** |
+| **Datafew Shield** | **97–100% on tool exec, 88–93% on content** | **Execution-level** |
 | GPT-4 + Shield (combined) | **99.9%+** | Joint |
 
 ### Cross-Language Capability
 
-| Language | Shield | Commercial A | Commercial B |
-|----------|--------|-------------|-------------|
-| English | 98.5% | ~90% | ~85% |
-| Chinese | 100% | ~30% | ~20% |
-| Classical Chinese | 100% | ~10% | ~5% |
-| Cantonese | 100% | ~15% | ~10% |
+Shield's execution-layer policies are language-independent (regex-based). The L1 embedding model (`paraphrase-multilingual-MiniLM-L12-v2`) natively supports 50+ languages.
+
+| Language | L0 Policy | L1 Semantic |
+|----------|-----------|-------------|
+| English | 100% | 93% |
+| Chinese | 100% | 88% |
+| Classical Chinese | 100% | 88% |
+| Cantonese | 100% | ~85% |
 
 ---
 

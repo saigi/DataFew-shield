@@ -4,8 +4,11 @@
  */
 import puppeteer from 'puppeteer';
 import { writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+var __dirname = dirname(fileURLToPath(import.meta.url));
 
-var SAVE_DIR = 'D:\\ProgramData\\No-Human\\datafew-shield\\data\\external';
+var SAVE_DIR = resolve(__dirname, '..', 'data', 'external');
 mkdirSync(SAVE_DIR, { recursive: true });
 
 var browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
@@ -23,7 +26,7 @@ async function fetch(url) {
 async function download(name, urls) {
   for (var url of urls) {
     var fname = name + '.' + url.split('.').pop();
-    var fpath = SAVE_DIR + '\\' + fname;
+    var fpath = resolve(SAVE_DIR, fname);
     if (existsSync(fpath)) { console.log('  ✓ ' + fname + ' (cached)'); continue; }
 
     var data = await fetch(url);

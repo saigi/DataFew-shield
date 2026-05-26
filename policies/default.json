@@ -27,6 +27,15 @@
     "reason": "检测到凭证文件访问"
   },
   {
+    "id": "block-terminal-cred-read",
+    "name": "阻止终端读取凭证文件",
+    "priority": 89,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(cat|type|more|less|head|tail|nl|tac|vi?m?|nvim?|bat) .*(shadow|passwd|\\.ssh|credential|\\.aws|\\.gcloud|secret|token)" },
+    "action": "block",
+    "reason": "检测到终端凭证文件读取"
+  },
+  {
     "id": "block-reverse-shell",
     "name": "阻止反向 Shell",
     "priority": 95,
@@ -135,6 +144,15 @@
     "reason": "检测到 DAN 越狱攻击"
   },
   {
+    "id": "block-mkfs",
+    "name": "阻止 mkfs 格式化",
+    "priority": 95,
+    "severity": "critical",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "mkfs\\." },
+    "action": "block",
+    "reason": "检测到文件系统格式化"
+  },
+  {
     "id": "block-dot-env-access",
     "name": "阻止 .env 文件读取",
     "priority": 85,
@@ -178,5 +196,14 @@
     "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(wget|curl).*(检查|check|安全|security|analyze|scan|review)" },
     "action": "block",
     "reason": "检测到间接注入: 下载外部资源后检查"
+  },
+  {
+    "id": "block-unicode-homoglyph",
+    "name": "阻止全角 Unicode 同形绕过",
+    "priority": 80,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "[\\uFF01-\\uFF5E]" },
+    "action": "block",
+    "reason": "检测到全角 Unicode 同形绕过"
   }
 ]

@@ -4,6 +4,9 @@
  */
 import { Shield, setEmbeddingReady } from '../index.js';
 import { request as h } from 'node:http';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+var __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function checkEmbed() {
   return new Promise(function(r) {
@@ -15,7 +18,7 @@ async function checkEmbed() {
 
 var health = await checkEmbed();
 setEmbeddingReady(health && health.status === 'ok');
-var shield = new Shield({ policyDir: 'D:\\ProgramData\\No-Human\\datafew-shield\\policies' });
+var shield = new Shield({ policyDir: resolve(__dirname, '..', 'policies') });
 await shield.sandboxManager.createSandbox('adversarial', {});
 
 var TOTAL = 0, PASS = 0;

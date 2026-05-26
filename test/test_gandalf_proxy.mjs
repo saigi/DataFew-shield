@@ -12,6 +12,9 @@
 import { Shield, setEmbeddingReady } from '../index.js';
 import { request as h } from 'node:http';
 import { writeFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+var __dirname = dirname(fileURLToPath(import.meta.url));
 
 var SECRET = 'KEEPSAFE2024';
 var TOTAL_ATTACKS = 0;
@@ -102,7 +105,7 @@ setEmbeddingReady(health && health.status === 'ok');
 console.log('Embedding server:', health ? health.harmful_refs + ' refs' : 'DOWN', '\n');
 
 // Initialize Shield for levels 2-4
-var shield = new Shield({ policyDir: 'D:\\ProgramData\\No-Human\\datafew-shield\\policies' });
+var shield = new Shield({ policyDir: resolve(__dirname, '..', 'policies') });
 
 // ─── Level 1: No defense (baseline) ───
 console.log('── Level 1: No Shield (baseline) ──');
