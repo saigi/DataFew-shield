@@ -2,7 +2,7 @@
  * DLP (Data Loss Prevention) Test Suite.
  * Tests data lineage tracking: read sensitive → egress blocked.
  */
-import { Shield, setEmbeddingReady } from '../index.js';
+import { Shield, setEmbeddingReady as setEmbeddingReady } from '../index.js';
 import { request as h } from 'node:http';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';

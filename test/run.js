@@ -2,17 +2,15 @@
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-var __dirname = dirname(fileURLToPath(import.meta.url));
-var shield = new Shield({ mode: 'inspect', policyDir: resolve(__dirname, '..', 'policies') });
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const shield = new Shield({ mode: 'inspect', policyDir: resolve(__dirname, '..', 'policies') });
 
 async function main() {
   console.log('Datafew Shield — Security Test Suite');
   console.log('='.repeat(60));
   console.log('Policies loaded: ' + shield.policyEngine.policies.length);
 
-  await shield.sandboxManager.createSandbox('test-s1', {});
-
-  var tests = [
+  const tests = [
     ['safe: ls -la',               'terminal',  'ls -la',                                   false],
     ['safe: git status',            'terminal',  'git status',                               false],
     ['safe: pip install flask',     'terminal',  'pip install flask',                        false],
@@ -28,18 +26,21 @@ async function main() {
     ['warn: nmap scan',             'terminal',  'nmap -sV 192.168.1.1',                     true],
   ];
 
-  var blocked = 0, passed = 0, failed = 0;
+  let blocked = 0, passed = 0, failed = 0;
 
-  for (var i = 0; i < tests.length; i++) {
-    var t = tests[i];
-    var r = await shield.inspect({ type: 'tool_call', tool: t[1], args: t[2], session_id: 'test-s1' });
-    var correct = r.allowed !== t[3];
+  for (let i = 0; i < tests.length; i++) {
+    const t = tests[i];
+    // Each test gets its own session to avoid L3 risk pollution
+    const sessionId = 'test-run-' + i + '-' + Date.now();
+    await shield.sandboxManager.createSandbox(sessionId, {});
+    const r = await shield.inspect({ type: 'tool_call', tool: t[1], args: t[2], session_id: sessionId });
+    const correct = r.allowed !== t[3];
     if (correct && !r.allowed) blocked++;
     else if (correct && r.allowed) passed++;
     else failed++;
     if (!correct) {
-      var exp = t[3] ? 'BLOCK' : 'ALLOW';
-      console.log('  FAIL: ' + t[0] + ' expected ' + exp + ' got ' + (r.allowed ? 'ALLOW' : 'BLOCK') + ' | ' + r.reason);
+      const exp = t[3] ? 'BLOCK' : 'ALLOW';
+      console.log('  FAIL: ' + t[0] + ' expected ' + exp + ' got ' + (r.allowed ? 'ALLOW' : 'BLOCK') + ' | layer=' + r.layer + ' reason=' + r.reason);
     }
   }
 
@@ -47,10 +48,13 @@ async function main() {
   console.log('  Blocked correctly: ' + blocked);
   console.log('  Allowed correctly: ' + passed);
   console.log('  Failed: ' + failed);
-  console.log('  Pass rate: ' + Math.round((blocked + passed) / tests.length * 100) + '%');
+  const passRate = Math.round((blocked + passed) / tests.length * 100);
+  console.log('  Pass rate: ' + passRate + '%');
 
   console.log('\nMetrics:');
   console.log(JSON.stringify(shield.auditEngine.getMetrics(), null, 2));
+
+  if (failed > 0) process.exit(1);
 }
 
-main().catch(function(e) { console.error('ERROR:', e); process.exit(1); });
+main().catch(function (e) { console.error('ERROR:', e); process.exit(1); });

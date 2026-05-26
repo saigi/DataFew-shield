@@ -4,7 +4,7 @@
  * 注意: 导入前设置环境变量（在命令行传入，不在代码中设置）
  * 推荐: DISABLE_EMBEDDING_SERVER=1 node test/resilient_test.mjs
  */
-import { Shield, setEmbeddingReady, EMBEDDING_SERVER_READY, classifyPath, dataDecision } from '../index.js';
+import { Shield, setEmbeddingReady, getEmbeddingServerReady, classifyPath, dataDecision } from '../index.js';
 import { request as httpRequest } from 'node:http';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
@@ -47,7 +47,7 @@ async function ensureReady() {
     console.log('  Embedding: OK (' + embed.data.harmful_refs + ' refs, thresh=' + embed.data.threshold + ')');
   }
   setEmbeddingReady(embed.ok);
-  console.log('  EMBEDDING_SERVER_READY (after set): ' + EMBEDDING_SERVER_READY);
+  console.log('  EMBEDDING_SERVER_READY (after set): ' + getEmbeddingServerReady());
   return embed.ok;
 }
 
