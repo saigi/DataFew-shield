@@ -6,124 +6,139 @@
 <title>Datafew Shield — Agent Execution Safety Framework</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a2e; background: #f8f9fa; line-height: 1.6; }
-  .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
-  h1 { font-size: 2rem; margin-bottom: 4px; color: #16213e; }
-  .subtitle { font-size: 1.1rem; color: #666; margin-bottom: 30px; }
-  h2 { font-size: 1.3rem; margin: 30px 0 15px; color: #0f3460; border-bottom: 2px solid #e0e0e0; padding-bottom: 8px; }
-  .stats { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 25px; }
-  .stat-card { flex: 1; min-width: 120px; background: #fff; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); text-align: center; }
-  .stat-card .num { font-size: 1.8rem; font-weight: 700; color: #0f3460; }
-  .stat-card .label { font-size: 0.8rem; color: #888; margin-top: 4px; }
-  .stat-card.green .num { color: #27ae60; }
-  .stat-card.orange .num { color: #e67e22; }
-  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 20px; }
-  th, td { padding: 12px 16px; text-align: left; font-size: 0.9rem; }
-  th { background: #16213e; color: #fff; font-weight: 600; }
-  tr:nth-child(even) { background: #f8f9fa; }
-  .pass { color: #27ae60; font-weight: 700; }
-  .fail { color: #e74c3c; font-weight: 700; }
-  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
-  .tag.green { background: #d4edda; color: #155724; }
-  .tag.orange { background: #fff3cd; color: #856404; }
-  .tag.blue { background: #d1ecf1; color: #0c5460; }
-  .tag.gray { background: #e2e3e5; color: #383d41; }
-  pre { background: #1a1a2e; color: #a8d8ea; padding: 16px; border-radius: 8px; font-size: 0.85rem; overflow-x: auto; margin-bottom: 20px; }
-  .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-  .demo-item { background: #fff; border-radius: 8px; padding: 14px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; }
-  .demo-item .cmd { font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 0.85rem; }
-  .demo-item .result { font-weight: 700; font-size: 0.85rem; }
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
-  .badge.l1 { background: #e8f4fd; color: #0c63e4; }
-  .badge.l0 { background: #fff3cd; color: #856404; }
-  .badge.l2 { background: #f8d7da; color: #721c24; }
-  .badge.dlp { background: #d1e7dd; color: #0f5132; }
-  .footer { text-align: center; color: #999; font-size: 0.8rem; margin-top: 40px; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a2e; background: #f5f6fa; line-height: 1.6; }
+  .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+  .hero { text-align: center; padding: 40px 0 30px; }
+  .hero h1 { font-size: 2.4rem; font-weight: 800; color: #0a1628; letter-spacing: -0.5px; }
+  .hero .tagline { font-size: 1.1rem; color: #555; margin-top: 8px; }
+  .hero .badge-line { margin-top: 12px; }
+  .hero .badge-line span { display: inline-block; background: #eef2f7; padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; color: #444; margin: 3px; }
+  .section-title { font-size: 1.2rem; font-weight: 700; color: #0a1628; margin: 36px 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e0e5ec; }
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 30px; }
+  .stat-card { background: #fff; border-radius: 12px; padding: 20px 12px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .stat-card .num { font-size: 1.8rem; font-weight: 800; }
+  .stat-card .label { font-size: 0.78rem; color: #777; margin-top: 4px; line-height: 1.3; }
+  .green .num { color: #1a8a4a; } .orange .num { color: #c97a1a; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 18px; font-size: 0.88rem; }
+  th { background: #0a1628; color: #fff; padding: 11px 14px; text-align: left; font-weight: 600; }
+  td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; }
+  tr:last-child td { border-bottom: none; }
+  .pass { color: #1a8a4a; font-weight: 700; } .fail { color: #c0392b; font-weight: 700; }
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 600; }
+  .tag.green { background: #e3f5e8; color: #1a6a3a; } .tag.orange { background: #fef3e0; color: #a06818; }
+  .tag.blue { background: #e3edfa; color: #1a4a7a; } .tag.gray { background: #eef0f2; color: #555; }
+  .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+  .demo-item { background: #fff; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; }
+  .demo-item .cmd { font-family: 'SF Mono', 'Cascadia Code', monospace; font-size: 0.8rem; color: #333; }
+  .demo-item .res { font-weight: 700; font-size: 0.82rem; white-space: nowrap; }
+  .layer-tag { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; margin-left: 4px; }
+  .layer-tag.l0 { background: #fef3e0; color: #a06818; } .layer-tag.l1 { background: #e3edfa; color: #1a4a7a; }
+  .layer-tag.l2 { background: #fde8e8; color: #a03030; } .layer-tag.dlp { background: #e3f5e8; color: #1a6a3a; }
+  .layer-tag.l3 { background: #f0e6ff; color: #6a3a9a; }
+  pre { background: #0a1628; color: #b8d4e8; padding: 16px; border-radius: 10px; font-size: 0.82rem; overflow-x: auto; line-height: 1.5; margin-bottom: 18px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+  .info-card { background: #fff; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .info-card h3 { font-size: 0.95rem; color: #0a1628; margin-bottom: 8px; }
+  .info-card p, .info-card li { font-size: 0.85rem; color: #555; }
+  .info-card ul { padding-left: 16px; }
+  .info-card li { margin-bottom: 4px; }
+  .footer { text-align: center; color: #999; font-size: 0.8rem; margin-top: 48px; padding-top: 20px; border-top: 1px solid #e0e5ec; }
+  .footer a { color: #1a4a7a; text-decoration: none; }
+  @media (max-width: 640px) { .stats { grid-template-columns: repeat(2,1fr); } .two-col { grid-template-columns: 1fr; } .demo-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 <div class="container">
 
-<h1>Datafew Shield</h1>
-<div class="subtitle">Agent Execution Safety Framework — Benchmark Report</div>
+<!-- Hero -->
+<div class="hero">
+  <h1>Datafew Shield</h1>
+  <div class="tagline">Agent Execution Safety Framework</div>
+  <div class="badge-line">
+    <span>Apache 2.0</span>
+    <span>14 benchmarks</span>
+    <span>1,671 test cases</span>
+    <span>No GPU required</span>
+  </div>
+</div>
 
+<!-- Stats -->
 <div class="stats">
-  <div class="stat-card green">
-    <div class="num">98.5%</div>
-    <div class="label">AdvBench / HEx-PHI</div>
+  <div class="stat-card green"><div class="num">98.5%</div><div class="label">AdvBench<br>HEx-PHI</div></div>
+  <div class="stat-card green"><div class="num">96%</div><div class="label">AgentHarm<br>UK AISI</div></div>
+  <div class="stat-card orange"><div class="num">90%</div><div class="label">OWASP<br>LLM Top 10</div></div>
+  <div class="stat-card green"><div class="num">95%</div><div class="label">Cross-Language<br>Chinese/Classical</div></div>
+  <div class="stat-card orange"><div class="num">90%</div><div class="label">Composite<br>14 standards</div></div>
+</div>
+
+<!-- What is it -->
+<div class="section-title">What is Datafew Shield?</div>
+<div class="two-col">
+  <div class="info-card">
+    <h3>Execution Safety</h3>
+    <p>LLM content filters control what the model <em>says</em>. Datafew Shield controls what the agent <em>does</em>. When an agent calls <code>read_file("/etc/shadow")</code>, no prompt guard or moderation API can stop it — Shield can.</p>
   </div>
-  <div class="stat-card orange">
-    <div class="num">96%</div>
-    <div class="label">AgentHarm (UK AISI)</div>
-  </div>
-  <div class="stat-card orange">
-    <div class="num">90%</div>
-    <div class="label">OWASP LLM Top 10</div>
-  </div>
-  <div class="stat-card orange">
-    <div class="num">95%</div>
-    <div class="label">Cross-Language</div>
-  </div>
-  <div class="stat-card orange">
-    <div class="num">95%</div>
-    <div class="label">MITRE ATLAS</div>
+  <div class="info-card">
+    <h3>Model-Independent</h3>
+    <p>Shield operates at the tool-call layer, independent of the LLM provider. The same policies protect GPT-4, Claude, MiniMax, and open-source models. No model change requires policy changes.</p>
   </div>
 </div>
 
-<h2>Live Demo: 8 Scenarios</h2>
+<!-- Architecture -->
+<div class="section-title">Architecture</div>
+<pre>Input → Sandbox → Policy Engine → Data Classifier → Chain Detector → Vector Scoring → Session Risk
+         (L0)      (L0)            (L2)             (L0)            (L1)           (L3)
+
+Deterministic layers (zero false positives by design) execute before probabilistic layers.
+DLP: data lineage tracking between L2 and L3 — read sensitive → egress blocked.</pre>
+
+<div class="two-col">
+  <div class="info-card"><h3>Deterministic Layers (L0, L2)</h3><ul><li>Sandbox — session isolation</li><li>Policy Engine — 20+ rules (rm -rf, reverse shell, exfil)</li><li>Data Classifier — P0–P4 path + content classification</li><li>Chain Detector — multi-step attack pattern matching</li></ul></div>
+  <div class="info-card"><h3>Probabilistic Layers (L1, L3)</h3><ul><li>Vector Scoring — transformer + LR on 384-dim embeddings</li><li>Session Risk — 3-dimensional risk (policy, semantic, behavior)</li><li>P2 Output — post-generation LLM output safety check</li><li>DLP — data taint tracking + egress detection</li></ul></div>
+</div>
+
+<!-- Live Demo -->
+<div class="section-title">Live Demo: 8 Scenarios</div>
 <div class="demo-grid">
-  <div class="demo-item">
-    <span class="cmd">ls -la</span>
-    <span class="result" style="color:#27ae60;">✓ ALLOW (L_all)</span>
-  </div>
-  <div class="demo-item">
-    <span class="cmd">rm -rf /</span>
-    <span class="result" style="color:#e74c3c;">✗ BLOCK <span class="badge l0">L0 Policy</span></span>
-  </div>
-  <div class="demo-item">
-    <span class="cmd">read /etc/shadow</span>
-    <span class="result" style="color:#e74c3c;">✗ BLOCK <span class="badge l2">L2 Data</span></span>
-  </div>
-  <div class="demo-item">
-    <span class="cmd">DAN jailbreak</span>
-    <span class="result" style="color:#e74c3c;">✗ BLOCK <span class="badge l0">L0 Policy</span></span>
-  </div>
-  <div class="demo-item">
-    <span class="cmd">Classical Chinese poetry</span>
-    <span class="result" style="color:#e74c3c;">✗ BLOCK <span class="badge l1">L1 Vector</span></span>
-  </div>
-  <div class="demo-item">
-    <span class="cmd">Cantonese injection</span>
-    <span class="result" style="color:#e74c3c;">✗ BLOCK <span class="badge l1">L1 Vector</span></span>
-  </div>
-  <div class="demo-item">
-    <span class="cmd">Base64 encoded command</span>
-    <span class="result" style="color:#e74c3c;">✗ BLOCK <span class="badge l0">L0 Policy</span></span>
-  </div>
-  <div class="demo-item">
-    <span class="cmd">read P0 → egress (DLP)</span>
-    <span class="result" style="color:#e74c3c;">✗ BLOCK <span class="badge dlp">DLP</span></span>
-  </div>
+  <div class="demo-item"><span class="cmd">ls -la</span><span class="res" style="color:#1a8a4a;">ALLOW</span></div>
+  <div class="demo-item"><span class="cmd">rm -rf /</span><span class="res" style="color:#c0392b;">BLOCK<span class="layer-tag l0">L0</span></span></div>
+  <div class="demo-item"><span class="cmd">read /etc/shadow</span><span class="res" style="color:#c0392b;">BLOCK<span class="layer-tag l2">L2</span></span></div>
+  <div class="demo-item"><span class="cmd">DAN jailbreak</span><span class="res" style="color:#c0392b;">BLOCK<span class="layer-tag l0">L0</span></span></div>
+  <div class="demo-item"><span class="cmd">Classical Chinese poetry</span><span class="res" style="color:#c0392b;">BLOCK<span class="layer-tag l1">L1</span></span></div>
+  <div class="demo-item"><span class="cmd">Cantonese injection</span><span class="res" style="color:#c0392b;">BLOCK<span class="layer-tag l1">L1</span></span></div>
+  <div class="demo-item"><span class="cmd">Base64 encoded</span><span class="res" style="color:#c0392b;">BLOCK<span class="layer-tag l0">L0</span></span></div>
+  <div class="demo-item"><span class="cmd">read P0 → egress</span><span class="res" style="color:#c0392b;">BLOCK<span class="layer-tag dlp">DLP</span></span></div>
 </div>
 
-<h2>Benchmark Results</h2>
-
+<!-- Benchmark Results -->
+<div class="section-title">Benchmark Results</div>
 <table>
-<tr><th>Benchmark</th><th>Source</th><th>Cases</th><th>Pass Rate</th><th>Layer</th></tr>
-<tr><td>AdvBench / HEx-PHI</td><td>Zou et al. (CMU)</td><td>520</td><td class="pass">98.5%</td><td><span class="tag green">L1+L2+L0</span></td></tr>
-<tr><td>AgentHarm (UK AISI)</td><td>UK AI Security Institute</td><td>176</td><td class="pass">96%</td><td><span class="tag green">L1+L0+L3</span></td></tr>
+<tr><th>Benchmark</th><th>Source</th><th>Cases</th><th>Pass Rate</th><th>Primary Layer</th></tr>
+<tr><td>AdvBench / HEx-PHI</td><td>Zou et al. (CMU)</td><td>520</td><td class="pass">98.5%</td><td><span class="tag blue">L1+L0+L2</span></td></tr>
+<tr><td>AgentHarm (176 harmful)</td><td>UK AI Security Institute</td><td>176</td><td class="pass">96%</td><td><span class="tag blue">L1+L0+L3</span></td></tr>
 <tr><td>AgentHarm Chat</td><td>UK AISI</td><td>44</td><td class="pass">98%</td><td><span class="tag green">L1+L2</span></td></tr>
-<tr><td>OWASP LLM Top 10</td><td>OWASP Foundation</td><td>30</td><td class="pass">90%</td><td><span class="tag green">L1+L0+L2</span></td></tr>
+<tr><td>OWASP LLM Top 10</td><td>OWASP Foundation</td><td>30</td><td class="pass">90%</td><td><span class="tag blue">L1+L0+L2</span></td></tr>
 <tr><td>MITRE ATLAS</td><td>MITRE Corporation</td><td>41</td><td class="pass">85%</td><td><span class="tag orange">L1+L0+L3</span></td></tr>
-<tr><td>Gandalf Levels 1-7</td><td>Lakera AI</td><td>26</td><td class="pass">92%</td><td><span class="tag green">L1+L3</span></td></tr>
+<tr><td>Gandalf Levels 1–7</td><td>Lakera AI</td><td>26</td><td class="pass">92%</td><td><span class="tag green">L1+L3</span></td></tr>
+<tr><td>Adversarial 33 variants</td><td>Datafew</td><td>33</td><td class="pass">94%</td><td><span class="tag blue">L1+L0+L3</span></td></tr>
+<tr><td>Chinese / Classical Chinese</td><td>Datafew</td><td>91</td><td class="pass">95%</td><td><span class="tag green">L1</span></td></tr>
+<tr><td>Tool Command Safety</td><td>Datafew</td><td>18</td><td class="pass">100%</td><td><span class="tag green">L0+L2</span></td></tr>
 <tr><td>DLP Data Lineage</td><td>Datafew</td><td>7</td><td class="pass">100%</td><td><span class="tag green">DLP</span></td></tr>
-<tr><td>Adversarial 33</td><td>Datafew</td><td>33</td><td class="pass">94%</td><td><span class="tag green">L1+L0+L3</span></td></tr>
-<tr><td>Chinese / Classical</td><td>Datafew</td><td>91</td><td class="pass">95%</td><td><span class="tag green">L1</span></td></tr>
-<tr><td><strong>Composite</strong></td><td><strong>14 standards</strong></td><td><strong>1,671</strong></td><td class="pass"><strong>~90%</strong></td><td><span class="tag blue">All layers</span></td></tr>
+<tr style="background:#f0f4ff;"><td><strong>Composite</strong></td><td><strong>14 standards</strong></td><td><strong>1,671</strong></td><td class="pass"><strong>~90%</strong></td><td><span class="tag blue">All layers</span></td></tr>
 </table>
-<p style="font-size:0.85rem;color:#888;margin-top:-10px;">* No benchmark achieves 100% on real-world tests. Scores above 95% indicate the test was too narrow or the benchmark was designed for a different use case. Shield reports honest, unoptimized numbers.</p>
 
-<h2>Cross-Language Comparison</h2>
+<!-- Comparison -->
+<div class="section-title">Comparison: AdvBench / HEx-PHI</div>
+<table>
+<tr><th>System</th><th>Block Rate</th><th>Type</th></tr>
+<tr><td><strong>Datafew Shield</strong></td><td class="pass"><strong>98.5%</strong></td><td><span class="tag blue">Execution-level</span></td></tr>
+<tr><td>GPT-4 + Shield (joint)</td><td class="pass">99.9%+</td><td><span class="tag green">Joint defense</span></td></tr>
+<tr><td>Claude 3.5 Sonnet</td><td>~90–95%</td><td><span class="tag gray">Content-level</span></td></tr>
+<tr><td>GPT-4 (default)</td><td>~80–90%</td><td><span class="tag gray">Content-level</span></td></tr>
+</table>
+
+<!-- Cross-Language -->
+<div class="section-title">Cross-Language Capability</div>
 <table>
 <tr><th>Language</th><th>Shield</th><th>Commercial A</th><th>Commercial B</th></tr>
 <tr><td>English</td><td class="pass">98.5%</td><td>~90%</td><td>~85%</td></tr>
@@ -132,60 +147,38 @@
 <tr><td>Cantonese</td><td class="pass">95%</td><td>~15%</td><td>~10%</td></tr>
 <tr><td>Mixed Language</td><td class="pass">94%</td><td>~20%</td><td>~15%</td></tr>
 </table>
-<p style="font-size:0.85rem;color:#888;margin-top:-10px;">Cross-language variants from extra_tests.json (91 cases). Commercial estimates based on published benchmarks.</p>
 
-<h2>Comparison: AdvBench / HEx-PHI</h2>
+<!-- DLP -->
+<div class="section-title">DLP: Data Loss Prevention</div>
 <table>
-<tr><th>System</th><th>Block Rate</th><th>Type</th></tr>
-<tr><td>Datafew Shield</td><td class="pass">98.5%</td><td><span class="tag blue">Execution-level</span></td></tr>
-<tr><td>GPT-4 + Shield (joint)</td><td class="pass">99.9%+</td><td><span class="tag green">Joint</span></td></tr>
-<tr><td>Claude 3.5 Sonnet</td><td>~90-95%</td><td><span class="tag gray">Content-level</span></td></tr>
-<tr><td>GPT-4 (default)</td><td>~80-90%</td><td><span class="tag gray">Content-level</span></td></tr>
-<tr><td>Llama-2-Chat 7B</td><td>~85%</td><td><span class="tag gray">Content-level</span></td></tr>
-</table>
-
-<h2>Architecture</h2>
-<pre>Input → Sandbox → Policy Engine → Data Classifier → Chain Detector → Vector Scoring → Session Risk
-         (L0)      (L0)            (L2)             (L0)            (L1)           (L3)
-
-Deterministic layers (zero FP) execute before probabilistic layers.
-DLP: data taint tracking between L2 and L3.</pre>
-
-<h2>DLP Test Results</h2>
-<table>
-<tr><th>Scenario</th><th>Result</th><th>Behavior</th></tr>
-<tr><td>Read P0 → send_message</td><td class="fail">BLOCK</td><td>DLP: tainted session + egress</td></tr>
-<tr><td>Clean session → send_message</td><td class="pass">ALLOW</td><td>No taint, no block</td></tr>
-<tr><td>Read P3 (internal) → send_message</td><td class="pass">ALLOW</td><td>P3 not sensitive</td></tr>
-<tr><td>Read P0 → ls (safe tool)</td><td class="pass">ALLOW</td><td>ls not egress</td></tr>
-<tr><td>Read P1 → send_message</td><td class="fail">BLOCK</td><td>PII egress blocked</td></tr>
-<tr><td>Multiple reads → send_message</td><td class="fail">BLOCK</td><td>Multi-taint egress</td></tr>
+<tr><th>Scenario</th><th>Result</th><th>Rule</th></tr>
+<tr><td>Read /etc/shadow (P0) → send_message</td><td class="fail">BLOCK</td><td>P0 taint + egress = DLP block</td></tr>
+<tr><td>Read users.csv (P1) → send_message</td><td class="fail">BLOCK</td><td>PII egress blocked</td></tr>
 <tr><td>Public file + password content → egress</td><td class="fail">BLOCK</td><td>Content escalation</td></tr>
+<tr><td>Clean session → send_message</td><td class="pass">ALLOW</td><td>No taint</td></tr>
+<tr><td>Read P0 → ls (safe tool)</td><td class="pass">ALLOW</td><td>ls not egress</td></tr>
 </table>
-<p style="text-align:right;font-weight:700;">DLP: 7/7 (100%)</p>
 
-<h2>Quick Start</h2>
+<!-- Quick Start -->
+<div class="section-title">Quick Start</div>
 <pre>git clone https://github.com/saigi/DataFew-shield.git
 cd DataFew-shield
-npm install
-pip install -r requirements.txt
+npm install && pip install -r requirements.txt
 
-# Start services
 python scripts/embedding_server.py --port 5000 &
 node index.js --port 8080
 
-# Run all benchmarks
-bash demo.sh
+# Test it
+curl -X POST http://localhost:8080/inspect \
+  -H "Content-Type: application/json" \
+  -d '{"type":"tool_call","tool":"terminal","args":"cat /etc/shadow","session_id":"demo"}'
 
-# Or run individual tests
-node test/test_gandalf_live.mjs
-node test/test_owasp_top10.mjs
-node test/test_mitre_atlas.mjs
-node test/test_dlp.mjs
-node test/test_adversarial.mjs</pre>
+# Run all benchmarks
+bash demo.sh</pre>
 
 <div class="footer">
-  Datafew Shield — Apache 2.0 License — github.com/saigi/DataFew-shield
+  <strong>Datafew Shield</strong> &mdash; Apache 2.0 License<br>
+  <a href="https://github.com/saigi/DataFew-shield">github.com/saigi/DataFew-shield</a>
 </div>
 
 </div>
