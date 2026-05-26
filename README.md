@@ -1,16 +1,18 @@
-﻿# Datafew Shield — Agent Execution Safety Framework
+﻿# Datafew Shield
 
-[![AdvBench 98.5%](https://img.shields.io/badge/AdvBench-98.5%25-success)](https://github.com/anomalyco/datafew-shield)
-[![AgentHarm 96%](https://img.shields.io/badge/AgentHarm-96%25-success)](https://github.com/anomalyco/datafew-shield)
-[![OWASP Top10 100%](https://img.shields.io/badge/OWASP_Top10-100%25-success)](https://github.com/anomalyco/datafew-shield)
-[![MITRE ATLAS 95%](https://img.shields.io/badge/MITRE_ATLAS-95%25-success)](https://github.com/anomalyco/datafew-shield)
+**Agent Execution Safety Framework**
+
+[![AdvBench 98.5%](https://img.shields.io/badge/AdvBench-98.5%25-success)](https://github.com/saigicai-Yi/datafew-shield)
+[![AgentHarm 96%](https://img.shields.io/badge/AgentHarm-96%25-success)](https://github.com/saigicai-Yi/datafew-shield)
+[![OWASP Top10 100%](https://img.shields.io/badge/OWASP_Top10-100%25-success)](https://github.com/saigicai-Yi/datafew-shield)
+[![MITRE ATLAS 95%](https://img.shields.io/badge/MITRE_ATLAS-95%25-success)](https://github.com/saigicai-Yi/datafew-shield)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue)](https://opensource.org/licenses/Apache-2.0)
 
-**When an AI agent calls `read_file("/etc/shadow")`, no LLM content filter can stop it. Datafew Shield can.**
+**LLM content filters control what the model says. Datafew Shield controls what the agent does.**
 
-Datafew Shield is an **execution safety layer** for AI agents. It sits between the agent framework and system resources, inspecting every tool call, file access, and behavioral sequence. It operates independently of the LLM — protecting against any model, any provider, and any jailbreak technique.
+When an AI agent calls `read_file("/etc/shadow")`, no prompt guard or moderation API can stop it. The content filter never sees the tool call. Datafew Shield is an **execution safety layer** that inspects every tool invocation, file access, and behavioral sequence — independent of the LLM, the model provider, or the jailbreak technique.
 
-**14 benchmarks · 1,671 test cases · 90%+ composite pass rate**
+Benchmarked across **14 industry and academic standards** with **1,671 test cases**: 98.5% on AdvBench/HEx-PHI, 96% on UK AISI AgentHarm, 100% on OWASP LLM Top 10, 100% on cross-language attacks including Classical Chinese and Cantonese.
 
 ---
 
