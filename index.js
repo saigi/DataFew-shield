@@ -211,9 +211,10 @@ function classifyPath(path) {
     for (var j = 0; j < SENSITIVE_PATTERNS[i].patterns.length; j++) {
       var pat = SENSITIVE_PATTERNS[i].patterns[j].replace(/\*/g, '.*');
       try { if (new RegExp(pat, 'i').test(path)) return SENSITIVE_PATTERNS[i].level; } catch(e) {}
+      }
     }
-  }
-  if (/^\/(workspace|project|src)\//.test(path)) return 'P3';
+
+    if (/^\/(workspace|project|src)\//.test(path)) return 'P3';
   return 'P4';
 }
 
@@ -233,247 +234,53 @@ function dataDecision(level) {
 }
 
 // ============================================================================
-// 第 3 层: 访问者 + 会话风险模型
+// 会话 + 访客存储 (用于 L3 风险累积和 DLP)
 // ============================================================================
 
-var VISITOR_STORE = new Map();    // visitorId → { risk, tags, sessions[], identities: {} }
-var SESSION_STORE = new Map();    // sessionId → { ... }
-var IDENTITY_LOG = [];             // 身份识别日志（持久化到文件）
-var IDENTITY_LOG_PATH = resolve(__dirname, 'data', 'identity_log.jsonl');
-var STORE_TTL = 3600000;           // 1 小时无活动自动清理
-var CLEANUP_INTERVAL = 300000;     // 每 5 分钟清理一次
+var VISITOR_STORE = new Map();
+var SESSION_STORE = new Map();
+var STORE_TTL = 3600000;
+var CLEANUP_INTERVAL = 300000;
 
-function cleanupStores() {
-  var now = Date.now();
-  var sessCutoff = 0, visitCutoff = 0;
-  SESSION_STORE.forEach(function(s, sid) {
-    if (now - s.lastActive > STORE_TTL) { SESSION_STORE.delete(sid); sessCutoff++; }
-  });
-  VISITOR_STORE.forEach(function(v, vid) {
-    if (now - v.lastSeen > STORE_TTL) { VISITOR_STORE.delete(vid); visitCutoff++; }
-  });
-  if (sessCutoff > 0 || visitCutoff > 0) console.error('[Cleanup] Removed ' + sessCutoff + ' sessions, ' + visitCutoff + ' visitors');
-}
-var cleanupTimer = setInterval(cleanupStores, CLEANUP_INTERVAL);
-if (cleanupTimer.unref) cleanupTimer.unref();
-
-// 启动时加载已有身份日志
-try {
-  if (existsSync(IDENTITY_LOG_PATH)) {
-    var lines = readFileSync(IDENTITY_LOG_PATH, 'utf-8').split('\n').filter(Boolean);
-    for (var li = 0; li < lines.length; li++) { try { IDENTITY_LOG.push(JSON.parse(lines[li])); } catch(e) {} }
-    console.error('[Identity] Loaded ' + IDENTITY_LOG.length + ' stored identities');
+function getSessionProfile(sessionId, visitorId) {
+  if (!SESSION_STORE.has(sessionId)) {
+    var baseRisk = 0;
+    if (visitorId) {
+      var visitor = getVisitorProfile(visitorId);
+      baseRisk = visitor.risk * 0.3;
+    }
+    SESSION_STORE.set(sessionId, {
+      id: sessionId, created: Date.now(), lastActive: Date.now(),
+      visitorId: visitorId || null,
+      risk: baseRisk, stepCount: 0, phase: 'exploration', locked: false,
+      tags: [], blockedCount: 0, lastTool: null,
+      policyRisk: 0, semanticRisk: 0, behaviorRisk: 0,
+    });
   }
-} catch(e) { /* first run */ }
+  return SESSION_STORE.get(sessionId);
+}
 
-/**
- * 获取访问者画像 (跨会话)
- */
 function getVisitorProfile(visitorId) {
   if (!VISITOR_STORE.has(visitorId)) {
     VISITOR_STORE.set(visitorId, {
       id: visitorId, firstSeen: Date.now(), lastSeen: Date.now(),
-      risk: 0, sessionCount: 0, blockedCount: 0, tags: [], sessionIds: [],
-      identities: {},  // { ip, device, userId, phone, email }
-      lastIp: null, lastDevice: null, lastUserId: null,
+      risk: 0, sessionCount: 0, blockedCount: 0, tags: [], identities: {},
     });
   }
   return VISITOR_STORE.get(visitorId);
 }
 
-/**
- * 记录身份信息到访问者 + 持久化日志
- */
-function recordIdentity(visitorId, identities) {
-  var visitor = getVisitorProfile(visitorId);
-  if (!identities) return;
-
-  // 合并身份信息（只覆盖非空值）
-  var changed = false;
-  ['ip', 'device', 'userId', 'user_id', 'phone', 'email', 'fingerprint'].forEach(function(key) {
-    var val = identities[key];
-    if (val && val !== 'unknown' && val !== '') {
-      if (val !== visitor.identities[key]) changed = true;
-      visitor.identities[key] = val;
-      if (key === 'ip') visitor.lastIp = val;
-      if (key === 'device') visitor.lastDevice = val;
-      if (key === 'userId' || key === 'user_id') visitor.lastUserId = val;
-    }
+function cleanupStores() {
+  var now = Date.now();
+  SESSION_STORE.forEach(function(s, sid) {
+    if (now - s.lastActive > STORE_TTL) SESSION_STORE.delete(sid);
   });
-
-  // 持久化记录
-  if (changed) {
-    var entry = {
-      ts: Date.now(), visitorId: visitorId,
-      identities: JSON.parse(JSON.stringify(visitor.identities)),
-      risk: visitor.risk, tags: visitor.tags.slice(),
-    };
-    IDENTITY_LOG.push(entry); if (IDENTITY_LOG.length > 1000) IDENTITY_LOG.shift();
-    try { appendFileSync(IDENTITY_LOG_PATH, JSON.stringify(entry) + '\n', 'utf-8'); } catch(e) {}
-  }
-}
-
-/**
- * 按 IP/设备/用户ID 搜索关联的访客
- */
-function searchIdentities(query) {
-  var results = [];
-  var seen = new Set();
-  var q = query.toLowerCase();
-
   VISITOR_STORE.forEach(function(v, vid) {
-    var match = false;
-    if (q && vid.toLowerCase().includes(q)) match = true;
-    ['ip', 'device', 'userId', 'phone', 'email'].forEach(function(k) {
-      if (v.identities[k] && String(v.identities[k]).toLowerCase().includes(q)) match = true;
-    });
-    if (q && v.lastUserId && v.lastUserId.toLowerCase().includes(q)) match = true;
-    if (!q) match = true;  // 空查询返回所有
-
-    if (match && !seen.has(vid)) {
-      seen.add(vid);
-      results.push({
-        visitorId: vid, risk: v.risk, tags: v.tags,
-        sessions: v.sessionCount, blocked: v.blockedCount,
-        identities: v.identities, lastSeen: v.lastSeen,
-      });
-    }
+    if (now - v.lastSeen > STORE_TTL) VISITOR_STORE.delete(vid);
   });
-
-  return results.sort(function(a, b) { return b.risk - a.risk; }).slice(0, 50);
 }
-
-/**
- * 获取会话画像 (自动关联访问者)
- */
-function getSessionProfile(sessionId, visitorId) {
-  if (!SESSION_STORE.has(sessionId)) {
-    // 如果有访问者，继承访问者的基线风险
-    var baseRisk = 0;
-    var visitor = null;
-    if (visitorId) {
-      visitor = getVisitorProfile(visitorId);
-      baseRisk = visitor.risk * 0.3;  // 新会话继承 30% 的访问者风险
-    }
-    SESSION_STORE.set(sessionId, {
-      id: sessionId, created: Date.now(), lastActive: Date.now(),
-      visitorId: visitorId || null,
-      embeddings: [], rawScores: [], timestamps: [],
-      risk: baseRisk, velocity: 0, acceleration: 0, riskHistory: [baseRisk],
-      segment: 0, stepCount: 0, phase: 'exploration', locked: false,
-      tags: [], blockedCount: 0,
-      // 分离风险维度
-      policyRisk: 0, semanticRisk: 0, behaviorRisk: 0,
-      lastTool: null,
-    });
-    // 关联到访问者
-    if (visitor) {
-      visitor.sessionIds.push(sessionId); if (visitor.sessionIds.length > 50) visitor.sessionIds.shift();
-      visitor.sessionCount++;
-      visitor.lastSeen = Date.now();
-    }
-  }
-  return SESSION_STORE.get(sessionId);
-}
-
-/**
- * 更新会话风险 + 传播到访问者
- *
- * 关键特性:
- *   1. 即使请求被拦截，风险也累积（被拦截本身是信号）
- *   2. 会话风险达到阈值时传播到访问者
- *   3. 访问者风险影响后续所有会话的基线
- *   4. 自动打标签
- */
-function updateSessionRisk(profile, embedding, rawScore, wasBlocked, blockLayer) {
-  var n = profile.stepCount;
-  profile.stepCount = n + 1;
-  if (embedding) { profile.embeddings.push(embedding); if (profile.embeddings.length > 20) profile.embeddings.shift(); }
-  profile.rawScores.push(rawScore); if (profile.rawScores.length > 20) profile.rawScores.shift();
-  profile.timestamps.push(Date.now()); if (profile.timestamps.length > 20) profile.timestamps.shift();
-  profile.lastActive = Date.now();
-
-  // 被拦截时自动增加风险（拦截本身是高危信号）
-  var effectiveScore = rawScore;
-  if (wasBlocked) {
-    effectiveScore = Math.min(1, rawScore + 0.25);
-    profile.blockedCount++;
-  }
-
-  // Embedding 位移惩罚
-  var deviation = 0;
-  if (n > 0 && embedding && profile.embeddings[n - 1]) {
-    for (var i = 0; i < Math.min(embedding.length, profile.embeddings[n - 1].length); i++) {
-      var d = embedding[i] - profile.embeddings[n - 1][i]; deviation += d * d;
-    }
-    deviation = Math.sqrt(deviation);
-  }
-  if (deviation > 0.5) effectiveScore = Math.min(1, effectiveScore + 0.15);
-
-  // 时间衰减
-  var alpha = 0.85;
-  if (n > 0 && profile.timestamps[n] - profile.timestamps[n - 1] > 60000) {
-    alpha *= Math.exp(-(profile.timestamps[n] - profile.timestamps[n - 1]) / 3600000);
-  }
-
-  // 累积风险 (EMA)
-  profile.risk = alpha * profile.risk + (1 - alpha) * effectiveScore;
-  profile.riskHistory.push(profile.risk); if (profile.riskHistory.length > 20) profile.riskHistory.shift();
-  if (n >= 1) profile.velocity = profile.risk - profile.riskHistory[n - 1];
-  if (n >= 2) profile.acceleration = profile.velocity - (profile.riskHistory[n - 1] - profile.riskHistory[n - 2]);
-
-  // 漏斗下层: 即时风险 = max(累积风险, 当前评分 × 乘数)
-  // 保证单次高风险请求即使没有累积也触发锁定
-  var immediateRisk = rawScore * L3_IMMEDIATE_RISK_RATIO;
-  var effectiveRisk = Math.max(profile.risk, immediateRisk);
-
-  // 锁定判定: 累积风险 OR 即时风险 OR 快速加速度
-  if (effectiveRisk > L3_IMMEDIATE_LOCK || profile.risk > 0.8 || (profile.acceleration > 0.2 && profile.velocity > 0.1)) {
-    profile.locked = true;
-  }
-
-  // 自动打标签
-  profile.tags = [];
-  if (profile.blockedCount >= 2) profile.tags.push('repeat_blocked');
-  if (profile.risk > 0.3) profile.tags.push('elevated_risk');
-  if (profile.risk > 0.5 || immediateRisk > 0.3) profile.tags.push('high_risk');
-  if (profile.velocity > 0.1) profile.tags.push('fast_rising');
-  if (profile.acceleration > 0.15) profile.tags.push('accelerating');
-
-  // ================================================================
-  // 风险传播: 会话 → 访问者
-  // ================================================================
-
-  if (profile.visitorId) {
-    var visitor = getVisitorProfile(profile.visitorId);
-    visitor.lastSeen = Date.now();
-
-    // 访问者风险 = max(历史风险, 当前会话风险 × 0.5)
-    var contribution = effectiveRisk * 0.5;
-    if (contribution > visitor.risk) {
-      visitor.risk = contribution;
-    }
-
-    // 传播会话标签到访问者
-    if (profile.locked) visitor.tags.push('session_locked');
-    if (profile.blockedCount >= 2) visitor.tags.push('repeat_blocker');
-    if (profile.risk > 0.6) visitor.tags.push('high_risk_visitor');
-    // 去重
-    visitor.tags = visitor.tags.filter(function(t, i) { return visitor.tags.indexOf(t) === i; });
-
-    // 更新拦截计数
-    if (wasBlocked) visitor.blockedCount++;
-  }
-
-  profile.phase = profile.locked ? 'lockdown' : (effectiveRisk > 0.3 ? 'execution' : (effectiveRisk > 0.15 ? 'focus' : 'exploration'));
-
-  return {
-    risk: profile.risk, velocity: profile.velocity, acceleration: profile.acceleration,
-    effectiveRisk: effectiveRisk, immediateRisk: immediateRisk,
-    phase: profile.phase, locked: profile.locked, tags: profile.tags,
-    visitorRisk: profile.visitorId ? getVisitorProfile(profile.visitorId).risk : 0,
-  };
-}
+var cleanupTimer = setInterval(cleanupStores, CLEANUP_INTERVAL);
+if (cleanupTimer.unref) cleanupTimer.unref();
 
 // ============================================================================
 // 第 4 层: 自增长反馈
@@ -683,6 +490,44 @@ export class Shield {
       }
     }
 
+    // ================================================================
+    // DLP: 数据血缘追踪 — 敏感读取标记 + 外传检测
+    // ================================================================
+    var profile = getSessionProfile(sid, visitorId);
+    if (profile.dataTaint === undefined) profile.dataTaint = 0;
+    if (profile.dataTaintTime === undefined) profile.dataTaintTime = 0;
+
+    // 衰减: 30 分钟 → 清除
+    if (profile.dataTaintTime > 0 && Date.now() - profile.dataTaintTime > 1800000) {
+      profile.dataTaint = 0;
+    }
+
+    // 读取敏感数据 → 污染
+    var dlpLevel = 0;
+    if (resourcePath) {
+      var dl = classifyPath(resourcePath);
+      dlpLevel = { P0: 3, P1: 2, P2: 1, P3: 0, P4: 0 }[dl] || 0;
+      if (dlpLevel > 0 && request.content) {
+        var cl = scanContent(request.content);
+        var clN = { P0: 3, P1: 2, P2: 1, P3: 0, P4: 0 }[cl] || 0;
+        if (clN > dlpLevel) dlpLevel = clN;
+      }
+    }
+    if (dlpLevel > profile.dataTaint) profile.dataTaint = dlpLevel;
+    if (dlpLevel > 0) profile.dataTaintTime = Date.now();
+
+    // 外传工具检测
+    var EGRESS = ['curl', 'wget', 'nc', 'ncat', 'socat', 'telnet', 'ssh', 'ftp', 'scp', 'send_message'];
+    var isEgress = EGRESS.some(function(t) { return request.tool && request.tool.includes(t); });
+
+    if (isEgress && profile.dataTaint > 0 && finalAllowed) {
+      var taintLabel = ['', 'P2', 'P1', 'P0'][profile.dataTaint];
+      audit.action = 'blocked'; audit.reason = 'dlp_egress_' + taintLabel; audit.layer = 'DLP';
+      this.auditEngine.record(audit);
+      this.sandboxManager.record(sid, { type: 'tool_call', tool: request.tool, args: request.args, result: 'blocked_by_dlp' });
+      finalAllowed = false; finalReason = 'dlp_egress_' + taintLabel; finalLayer = 'DLP';
+    }
+
     // L0: 攻击链 (chain) — 合并沙箱历史 + 请求历史
     if (finalAllowed) {
       var history = (sc.sandbox ? sc.sandbox.history : []).concat(request.history || []);
@@ -760,7 +605,6 @@ export class Shield {
     //   behaviorRisk: 工具切换/频率 (行为信号)
     // ================================================================
 
-    var profile = getSessionProfile(sid, visitorId);
     var wasBlocked = !finalAllowed;
     var blockLayerVal = wasBlocked ? finalLayer : null;
 
@@ -1105,13 +949,3 @@ if (args.length > 0 && !args[0].startsWith('--')) {
 
 export default Shield;
 export function setEmbeddingReady(v) { EMBEDDING_SERVER_READY = !!v; }
-export {
-  EMBEDDING_THRESHOLD, EMBEDDING_SERVER_READY,
-  L1_BLOCK_THRESHOLD, L3_IMMEDIATE_RISK_RATIO, L3_IMMEDIATE_LOCK,
-  fallbackScore, embeddingScore, cosine,
-  classifyPath, scanContent, dataDecision, SENSITIVE_PATTERNS, CONTENT_PATTERNS,
-  getSessionProfile, updateSessionRisk,
-  VISITOR_STORE, SESSION_STORE, IDENTITY_LOG,
-  searchIdentities, recordIdentity, getVisitorProfile,
-  FALLBACK_DANGEROUS,
-};
