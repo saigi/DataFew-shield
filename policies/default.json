@@ -1,0 +1,200 @@
+[
+  {
+    "id": "block-rm-rf",
+    "name": "阻止递归删除根目录",
+    "priority": 100,
+    "severity": "critical",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "rm -rf /" },
+    "action": "block",
+    "reason": "高危：递归删除根目录"
+  },
+  {
+    "id": "block-dd-write",
+    "name": "阻止 dd 直接写块设备",
+    "priority": 95,
+    "severity": "critical",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "dd if=.*of=(/dev|/tmp|/opt|/usr|/etc|/root|/home)" },
+    "action": "block",
+    "reason": "高危：直接写块设备"
+  },
+  {
+    "id": "block-credential-files",
+    "name": "阻止读取凭证文件",
+    "priority": 90,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "read_file", "args_pattern": "(\\.ssh|credentials|\\.aws|/etc/shadow|/etc/passwd|token|secret)" },
+    "action": "block",
+    "reason": "检测到凭证文件访问"
+  },
+  {
+    "id": "block-reverse-shell",
+    "name": "阻止反向 Shell",
+    "priority": 95,
+    "severity": "critical",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(bash -i.*/dev/tcp|nc .*-e |ncat.*-e |socat.*exec|mkfifo)" },
+    "action": "block",
+    "reason": "检测到反向 Shell"
+  },
+  {
+    "id": "block-data-exfil",
+    "name": "阻止数据外传命令",
+    "priority": 85,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(curl.*-d @|curl.*--data @|wget.*--post-file|nc [0-9]+\\.[0-9]+)" },
+    "action": "block",
+    "reason": "检测到数据外传"
+  },
+  {
+    "id": "block-curl-pipe-bash",
+    "name": "阻止 curl/bash 远程执行",
+    "priority": 90,
+    "severity": "critical",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "curl.*\\| (bash|sh)" },
+    "action": "block",
+    "reason": "高危：远程下载后执行"
+  },
+  {
+    "id": "block-port-scan",
+    "name": "阻止端口扫描",
+    "priority": 70,
+    "severity": "medium",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "^(nmap|masscan|zmap)" },
+    "action": "block",
+    "reason": "检测到端口扫描工具"
+  },
+  {
+    "id": "block-cron-persist",
+    "name": "阻止定时任务持久化",
+    "priority": 85,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(crontab|cron\b|at\b|systemctl.*timer|schtasks)" },
+    "action": "block",
+    "reason": "检测到定时任务持久化"
+  },
+  {
+    "id": "block-ssh-backdoor",
+    "name": "阻止 SSH 后门安装",
+    "priority": 90,
+    "severity": "critical",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(authorized_keys|ssh-keygen|ssh-copy-id|.ssh/)" },
+    "action": "block",
+    "reason": "检测到 SSH 后门安装"
+  },
+  {
+    "id": "block-wget-curl-download",
+    "name": "阻止 wget/curl 下载到系统目录",
+    "priority": 80,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(wget|curl).*-[Oo] /(usr|etc|opt|root)" },
+    "action": "block",
+    "reason": "检测到下载文件到系统目录"
+  },
+  {
+    "id": "block-chinese-jailbreak",
+    "name": "阻止中文越狱关键词",
+    "priority": 75,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(忽略.*指令|入侵.*服务器|恶意软件|制作.*病毒|攻击.*网站|窃取.*数据|绕过.*安全)" },
+    "action": "block",
+    "reason": "检测到中文越狱关键词"
+  },
+  {
+    "id": "block-tax-evasion",
+    "name": "阻止税务规避建议",
+    "priority": 70,
+    "severity": "medium",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(evade tax|tax evasion|逃税|避税|hide.*income|offshore.*account|shell.*company)" },
+    "action": "block",
+    "reason": "检测到税务规避请求"
+  },
+  {
+    "id": "block-porn-content",
+    "name": "阻止色情内容生成",
+    "priority": 70,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(pornograph|explicit.*story|pornographic|色情|淫秽|成人内容)" },
+    "action": "block",
+    "reason": "检测到色情内容请求"
+  },
+  {
+    "id": "block-hate-content",
+    "name": "阻止仇恨内容",
+    "priority": 70,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(racist|种族主义|歧视|hate speech|white supremac)" },
+    "action": "block",
+    "reason": "检测到仇恨内容请求"
+  },
+  {
+    "id": "block-dan-jailbreak",
+    "name": "阻止 DAN 越狱",
+    "priority": 80,
+    "severity": "critical",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "DAN|Do Anything Now|越狱|jailbreak" },
+    "action": "block",
+    "reason": "检测到 DAN 越狱攻击"
+  },
+  {
+    "id": "block-dot-env-access",
+    "name": "阻止 .env 文件读取",
+    "priority": 85,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "\\.env|creds\\.txt|credentials\\.txt" },
+    "action": "block",
+    "reason": "检测到凭证文件读取"
+  },
+  {
+    "id": "block-redteam-jargon",
+    "name": "阻止红队术语伪装",
+    "priority": 75,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(模拟.*APT|红队演练|渗透测试.*步骤|灾难恢复演练.*密码|密码哈希.*备份)" },
+    "action": "block",
+    "reason": "检测到红队术语伪装"
+  },
+  {
+    "id": "block-etc-config-read",
+    "name": "阻止读取 /etc/ 下配置文件",
+    "priority": 85,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "read_file", "args_pattern": "/etc/.*\\.(json|yml|yaml|conf|cfg|ini|cnf|env)" },
+    "action": "block",
+    "reason": "检测到系统配置读取"
+  },
+  {
+    "id": "block-curl-wget-check",
+    "name": "阻止下载文件后检查/执行",
+    "priority": 85,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(wget|curl).*(检查|check|安全|security|analyze|scan|review)" },
+    "action": "block",
+    "reason": "检测到间接注入: 下载外部资源后检查"
+  },
+  {
+    "id": "block-bash-history-read",
+    "name": "阻止读取 bash 历史",
+    "priority": 80,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(\\.bash_history|history|cat.*bash)" },
+    "action": "block",
+    "reason": "检测到历史记录读取"
+  },
+  {
+    "id": "block-chinese-read-config",
+    "name": "阻止中文指示读取配置",
+    "priority": 80,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(读取|查看|打开).*(/etc|配置|config)" },
+    "action": "block",
+    "reason": "检测到中文指示读取配置"
+  },
+  {
+    "id": "block-chinese-download-check",
+    "name": "阻止中文指示下载脚本",
+    "priority": 80,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(下载|wget|curl).*(脚本|检查|执行|安全)" },
+    "action": "block",
+    "reason": "检测到中文指示下载外部脚本"
+  }
+]

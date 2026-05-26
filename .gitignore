@@ -1,0 +1,12 @@
+node_modules/
+results/
+data/external/*.jsonl
+data/external/*.csv
+data/identity_log.jsonl
+data/supcon_model/model.safetensors
+data/garak_*.json
+*.log
+test_output.txt
+ape_output/
+__pycache__/
+.PHONY

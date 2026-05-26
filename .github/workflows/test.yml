@@ -1,0 +1,62 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install Node dependencies
+      run: npm install
+
+    - name: Install Python dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install sentence-transformers
+
+    - name: Start embedding server
+      run: |
+        python scripts/embedding_server.py --port 5000 &
+        sleep 30  # Wait for model to load
+
+    - name: Run quick test
+      run: node test/run.js
+      env:
+        DISABLE_EMBEDDING_SERVER: '1'
+
+    - name: Run Gandalf test
+      run: node test/test_gandalf_live.mjs
+      env:
+        DISABLE_EMBEDDING_SERVER: '1'
+
+    - name: Run OWASP test
+      run: node test/test_owasp_top10.mjs
+      env:
+        DISABLE_EMBEDDING_SERVER: '1'
+
+    - name: Run MITRE ATLAS test
+      run: node test/test_mitre_atlas.mjs
+      env:
+        DISABLE_EMBEDDING_SERVER: '1'
+
+    - name: Run AdvBench test
+      run: node test/test_advbench.mjs
+      env:
+        DISABLE_EMBEDDING_SERVER: '1'
