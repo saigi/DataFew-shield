@@ -507,11 +507,12 @@ export class Shield {
     if (resourcePath) {
       var dl = classifyPath(resourcePath);
       dlpLevel = { P0: 3, P1: 2, P2: 1, P3: 0, P4: 0 }[dl] || 0;
-      if (dlpLevel > 0 && request.content) {
-        var cl = scanContent(request.content);
-        var clN = { P0: 3, P1: 2, P2: 1, P3: 0, P4: 0 }[cl] || 0;
-        if (clN > dlpLevel) dlpLevel = clN;
-      }
+    }
+    // 内容扫描始终执行, 覆盖路径级别
+    if (request.content) {
+      var cl = scanContent(request.content);
+      var clN = { P0: 3, P1: 2, P2: 1, P3: 0, P4: 0 }[cl] || 0;
+      if (clN > dlpLevel) dlpLevel = clN;
     }
     if (dlpLevel > profile.dataTaint) profile.dataTaint = dlpLevel;
     if (dlpLevel > 0) profile.dataTaintTime = Date.now();
