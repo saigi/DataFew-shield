@@ -153,6 +153,15 @@
     "reason": "检测到红队术语伪装"
   },
   {
+    "id": "block-base64-pipe",
+    "name": "阻止 base64 管道解码执行",
+    "priority": 85,
+    "severity": "high",
+    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(base64|base32|hex).*\\|.*(bash|sh|zsh|exec|eval|source)|\\|.*(base64|base32|hex).*-d" },
+    "action": "block",
+    "reason": "检测到编码命令执行"
+  },
+  {
     "id": "block-etc-config-read",
     "name": "阻止读取 /etc/ 下配置文件",
     "priority": 85,
@@ -169,32 +178,5 @@
     "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(wget|curl).*(检查|check|安全|security|analyze|scan|review)" },
     "action": "block",
     "reason": "检测到间接注入: 下载外部资源后检查"
-  },
-  {
-    "id": "block-bash-history-read",
-    "name": "阻止读取 bash 历史",
-    "priority": 80,
-    "severity": "high",
-    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(\\.bash_history|history|cat.*bash)" },
-    "action": "block",
-    "reason": "检测到历史记录读取"
-  },
-  {
-    "id": "block-chinese-read-config",
-    "name": "阻止中文指示读取配置",
-    "priority": 80,
-    "severity": "high",
-    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(读取|查看|打开).*(/etc|配置|config)" },
-    "action": "block",
-    "reason": "检测到中文指示读取配置"
-  },
-  {
-    "id": "block-chinese-download-check",
-    "name": "阻止中文指示下载脚本",
-    "priority": 80,
-    "severity": "high",
-    "match": { "type": "tool_call", "tool": "terminal", "args_pattern": "(下载|wget|curl).*(脚本|检查|执行|安全)" },
-    "action": "block",
-    "reason": "检测到中文指示下载外部脚本"
   }
 ]
