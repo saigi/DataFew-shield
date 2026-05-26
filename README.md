@@ -2,10 +2,10 @@
 
 **Agent Execution Safety Framework**
 
-[![AdvBench 98.5%](https://img.shields.io/badge/AdvBench-98.5%25-success)](https://github.com/saigicai-Yi/datafew-shield)
-[![AgentHarm 96%](https://img.shields.io/badge/AgentHarm-96%25-success)](https://github.com/saigicai-Yi/datafew-shield)
-[![OWASP Top10 100%](https://img.shields.io/badge/OWASP_Top10-100%25-success)](https://github.com/saigicai-Yi/datafew-shield)
-[![MITRE ATLAS 95%](https://img.shields.io/badge/MITRE_ATLAS-95%25-success)](https://github.com/saigicai-Yi/datafew-shield)
+[![AdvBench 98.5%](https://img.shields.io/badge/AdvBench-98.5%25-success)](https://github.com/saigi/DataFew-shield)
+[![AgentHarm 96%](https://img.shields.io/badge/AgentHarm-96%25-success)](https://github.com/saigi/DataFew-shield)
+[![OWASP Top10 100%](https://img.shields.io/badge/OWASP_Top10-100%25-success)](https://github.com/saigi/DataFew-shield)
+[![MITRE ATLAS 95%](https://img.shields.io/badge/MITRE_ATLAS-95%25-success)](https://github.com/saigi/DataFew-shield)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue)](https://opensource.org/licenses/Apache-2.0)
 
 **LLM content filters control what the model says. Datafew Shield controls what the agent does.**
@@ -20,7 +20,7 @@ Benchmarked across **14 industry and academic standards** with **1,671 test case
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/anomalyco/datafew-shield.git
+git clone https://github.com/saigi/DataFew-shield.git
 cd datafew-shield
 npm install
 pip install -r requirements.txt
@@ -114,16 +114,24 @@ Input → Sandbox → Policy Engine → Data Classifier → Chain Detector → V
 
 ```bash
 # As a proxy service
-node index.js --port 8080 --policies ./policies
+git clone https://github.com/saigi/DataFew-shield.git
+cd DataFew-shield
+npm install
+pip install -r requirements.txt
+python scripts/embedding_server.py --port 5000 &
+node index.js --port 8080
+```
 
-# As a library
-import { Shield } from 'datafew-shield';
+```javascript
+// As a library (import from local clone)
+import { Shield } from './index.js';
 const shield = new Shield({ policies: './policies' });
 const result = await shield.inspect({
   type: 'tool_call',
   tool: 'terminal',
   args: 'cat /etc/shadow',
 });
+// → { allowed: false, reason: 'credential_blocked', layer: 'L2' }
 ```
 
 ---
@@ -176,7 +184,7 @@ This runs without service interruption.
 ## Project Structure
 
 ```
-datafew-shield/
+DataFew-shield/
 ├── index.js              # Main shield service
 ├── policies/
 │   └── default.json      # Policy rules (20+)
