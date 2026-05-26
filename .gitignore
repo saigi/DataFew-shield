@@ -3,7 +3,7 @@ results/
 data/external/*.jsonl
 data/external/*.csv
 data/identity_log.jsonl
-data/supcon_model/model.safetensors
+data/supcon_model/
 data/garak_*.json
 *.log
 test_output.txt

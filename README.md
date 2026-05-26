@@ -128,6 +128,35 @@ const result = await shield.inspect({
 
 ---
 
+## Production Deployment
+
+### Security Checklist
+
+Before deploying Datafew Shield in production, review the following:
+
+```
+□ RESTRICT CORS:   Edit index.js → change Access-Control-Allow-Origin from "*" to your agent domain
+□ ADD AUTH:        Implement a reverse proxy (nginx) with API key authentication
+□ NETWORK:         Run embedding server on internal network only (not publicly accessible)
+□ FIREWALL:        Restrict port 5000 (embedding) to localhost; only expose port 8080 (shield)
+□ RATE LIMIT:      Add rate limiting to /inspect endpoint (e.g., 100 req/min per client)
+□ MONITORING:      Monitor /health endpoint for embedding server availability
+□ BACKUP:          Backup data/embedding_refs.json regularly (stores learned patterns)
+□ UPDATE:          Keep sentence-transformers and dependencies updated
+```
+
+### Performance
+
+| Metric | Value |
+|--------|-------|
+| Latency (no embedding) | <5ms per inspect |
+| Latency (with embedding) | ~50-100ms per inspect |
+| Throughput | ~100 req/s (single core) |
+| Memory (Node) | ~50 MB |
+| Memory (Python) | ~2 GB (model) |
+
+---
+
 ## Self-Growing Feedback Loop
 
 The shield improves continuously through a feedback loop:
